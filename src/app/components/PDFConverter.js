@@ -149,6 +149,7 @@ export default function PDFConverter({ file }) {
       
       // For demonstration purposes, we'll create a simple PDF
       const { width, height } = page.getSize();
+      console.log(width)
       page.drawText(`Converted from ${file.name}`, {
         x: 50,
         y: height - 50,

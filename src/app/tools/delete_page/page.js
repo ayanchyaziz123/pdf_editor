@@ -5,7 +5,7 @@ import Navbar from '../../components/Navbar';
 import Footer from "@/app/components/Footer";
 import FileUploader from "../../components/FileUploader";
 import PDFPageDeleter from "../../components/PDFPageDeleter";
-import { Trash2 } from "lucide-react";
+
 
 export default function DeletePDFPagesPage() {
   const [file, setFile] = useState(null);

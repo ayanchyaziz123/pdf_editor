@@ -5,7 +5,7 @@ import Navbar from '../../components/Navbar';
 import Footer from "@/app/components/Footer";
 import FileUploader from "../../components/FileUploader";
 import PDFConverter from "../../components/PDFConverter";
-import { FileUp } from "lucide-react";
+
 
 export default function ConvertPDFPage() {
   const [file, setFile] = useState(null);
