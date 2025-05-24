@@ -12,7 +12,7 @@ export default function PDFPageDeleter({ file }) {
   const [pages, setPages] = useState([]);
   const [selectedPages, setSelectedPages] = useState([]);
   const [error, setError] = useState(null);
-  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  // const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   // Load PDF info when file changes
   useEffect(() => {

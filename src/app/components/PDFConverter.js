@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { PDFDocument } from "pdf-lib";
 import { 
-  FileUp, 
+
   Loader2, 
   Download, 
   FileCheck, 
@@ -118,6 +118,7 @@ export default function PDFConverter({ file }) {
       
       // For demonstration purposes, we'll create a simple PDF
       const { width, height } = page.getSize();
+      console.log("width", width);
       page.drawText(`Converted from ${file.name}`, {
         x: 50,
         y: height - 50,
@@ -232,6 +233,7 @@ export default function PDFConverter({ file }) {
         fileExtension = "pdf";
         mimeType = "application/pdf";
       }
+      console.log("Compressed size:", mimeType);
       
       // Generate URL for the blob
       const url = URL.createObjectURL(resultBlob);

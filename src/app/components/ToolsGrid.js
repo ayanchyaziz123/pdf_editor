@@ -4,10 +4,7 @@ import {
   Combine, 
   Scissors, 
   FileArchive, 
-  Printer, 
   FileUp, 
-  FileDown, 
-  Rotate3d,
   Trash
 } from "lucide-react";
 
