@@ -233,7 +233,7 @@ export default function PDFConverter({ file }) {
         fileExtension = "pdf";
         mimeType = "application/pdf";
       }
-      console.log("Compressed size:", mimeType);
+      console.log("mime:", mimeType);
       
       // Generate URL for the blob
       const url = URL.createObjectURL(resultBlob);

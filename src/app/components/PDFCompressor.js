@@ -14,6 +14,7 @@ export default function PDFCompressor({ file }) {
   const [pageCount, setPageCount] = useState(0);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
+  console.log("Compressed size:", compressedSize);
 
   // Load PDF info when file changes
   useEffect(() => {
