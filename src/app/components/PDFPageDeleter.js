@@ -1,8 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PDFDocument } from "pdf-lib";
 import { Trash2, Loader2, Download, FileCheck, Eye, Check } from "lucide-react";
-
 
 export default function PDFPageDeleter({ file }) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -12,38 +11,139 @@ export default function PDFPageDeleter({ file }) {
   const [pages, setPages] = useState([]);
   const [selectedPages, setSelectedPages] = useState([]);
   const [error, setError] = useState(null);
-  // const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [pageImages, setPageImages] = useState({});
+  const [loadingPreviews, setLoadingPreviews] = useState(false);
+  const [pdfJsLoaded, setPdfJsLoaded] = useState(false);
 
-  // Load PDF info when file changes
+  // Load PDF.js from CDN
+  useEffect(() => {
+    const loadPdfJs = async () => {
+      if (window.pdfjsLib) {
+        setPdfJsLoaded(true);
+        return;
+      }
+
+      try {
+        // Load PDF.js from CDN
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        script.onload = () => {
+          // Set worker
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          setPdfJsLoaded(true);
+        };
+        script.onerror = () => {
+          setError('Failed to load PDF.js library');
+        };
+        document.head.appendChild(script);
+      } catch (err) {
+        setError('Failed to load PDF.js library');
+      }
+    };
+
+    loadPdfJs();
+  }, []);
+
+  // Load PDF info and generate previews when file changes
   useEffect(() => {
     const loadPdfInfo = async () => {
       try {
-        if (!file) return;
+        if (!file || !pdfJsLoaded) return;
         
         // Reset state
         setModifiedPdfUrl(null);
         setError(null);
         setSelectedPages([]);
+        setPageImages({});
+        setLoadingPreviews(true);
         
-        // Load the PDF document to get page count
+        // Load the PDF document to get page count using pdf-lib
         const arrayBuffer = await file.arrayBuffer();
         const pdfDoc = await PDFDocument.load(arrayBuffer);
         const count = pdfDoc.getPageCount();
         setPageCount(count);
         
         // Create pages array with indexes
-        setPages(Array.from({ length: count }, (_, i) => ({
+        const pagesArray = Array.from({ length: count }, (_, i) => ({
           index: i,
           pageNumber: i + 1,
-        })));
+        }));
+        setPages(pagesArray);
+        
+        // Generate page previews using PDF.js
+        await generatePagePreviews(arrayBuffer, count);
+        
       } catch (err) {
         console.error("Error loading PDF:", err);
         setError("Failed to load PDF file. Please ensure the file is a valid PDF document.");
+        setLoadingPreviews(false);
       }
     };
     
     loadPdfInfo();
-  }, [file]);
+  }, [file, pdfJsLoaded]);
+
+  const generatePagePreviews = async (arrayBuffer, count) => {
+    try {
+      if (!window.pdfjsLib) {
+        throw new Error('PDF.js not loaded');
+      }
+
+      // Load PDF with PDF.js
+      const loadingTask = window.pdfjsLib.getDocument({
+        data: arrayBuffer,
+        cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+        cMapPacked: true,
+      });
+      
+      const pdf = await loadingTask.promise;
+      const newPageImages = {};
+      
+      // Generate previews for each page
+      for (let pageNum = 1; pageNum <= count; pageNum++) {
+        try {
+          const page = await pdf.getPage(pageNum);
+          
+          // Set scale for thumbnail (smaller for performance)
+          const scale = 0.5;
+          const viewport = page.getViewport({ scale });
+          
+          // Create canvas
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          
+          const context = canvas.getContext('2d');
+          
+          // Render page
+          const renderContext = {
+            canvasContext: context,
+            viewport: viewport,
+          };
+          
+          await page.render(renderContext).promise;
+          
+          // Convert to data URL
+          newPageImages[pageNum - 1] = canvas.toDataURL('image/jpeg', 0.8);
+          
+          // Update state incrementally so user sees progress
+          setPageImages(prev => ({ ...prev, [pageNum - 1]: newPageImages[pageNum - 1] }));
+          
+        } catch (pageErr) {
+          console.error(`Error rendering page ${pageNum}:`, pageErr);
+          // Create a placeholder for failed pages
+          newPageImages[pageNum - 1] = null;
+        }
+      }
+      
+      setLoadingPreviews(false);
+    } catch (err) {
+      console.error("Error generating previews:", err);
+      setError("Failed to generate page previews. You can still use the tool without previews.");
+      setLoadingPreviews(false);
+    }
+  };
 
   const togglePageSelection = (pageIndex) => {
     setSelectedPages(prevSelected => {
@@ -135,16 +235,30 @@ export default function PDFPageDeleter({ file }) {
     else return (bytes / 1048576).toFixed(2) + " MB";
   };
 
+  // Show loading state while PDF.js is loading
+  if (!pdfJsLoaded) {
+    return (
+      <div className="mt-8 mb-16">
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-6xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="animate-spin mr-2" size={24} />
+            <span className="text-gray-600">Loading PDF viewer...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-8 mb-16">
-      <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto">
+      <div className="bg-white rounded-lg shadow-md p-6 max-w-6xl mx-auto">
         <h2 className="text-2xl font-semibold mb-4">Delete PDF Pages</h2>
         
         <div className="mb-6">
           <div className="flex items-center bg-gray-50 p-3 rounded-md">
             <FileCheck className="text-green-500 mr-2" size={20} />
-            <div className="flex-1 truncate">{file.name}</div>
-            <div className="text-gray-500 text-sm">{formatFileSize(file.size)}</div>
+            <div className="flex-1 truncate">{file?.name || 'sample.pdf'}</div>
+            <div className="text-gray-500 text-sm">{formatFileSize(file?.size || 1024000)}</div>
           </div>
           <div className="mt-2 text-sm text-gray-600">
             Total pages: {pageCount}
@@ -184,26 +298,68 @@ export default function PDFPageDeleter({ file }) {
             </div>
           </div>
           
-          <div className="grid grid-cols-5 sm:grid-cols-8 gap-2">
-            {pages.map((page) => (
-              <button
-                key={page.index}
-                onClick={() => togglePageSelection(page.index)}
-                className={`relative aspect-[3/4] flex items-center justify-center border rounded-md transition-colors ${
-                  selectedPages.includes(page.index)
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                <span className="text-sm">{page.pageNumber}</span>
-                {selectedPages.includes(page.index) && (
-                  <div className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5">
-                    <Check size={12} />
+          {loadingPreviews && Object.keys(pageImages).length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="animate-spin mr-2" size={24} />
+              <span className="text-gray-600">Generating page previews...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {pages.map((page) => (
+                <button
+                  key={page.index}
+                  onClick={() => togglePageSelection(page.index)}
+                  className={`relative group flex flex-col items-center p-2 border-2 rounded-lg transition-all hover:shadow-md ${
+                    selectedPages.includes(page.index)
+                      ? "border-red-500 bg-red-50 shadow-md"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  {/* Page Preview */}
+                  <div className="relative mb-2 w-full aspect-[3/4] bg-white rounded border overflow-hidden">
+                    {pageImages[page.index] ? (
+                      <img
+                        src={pageImages[page.index]}
+                        alt={`Page ${page.pageNumber}`}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : loadingPreviews ? (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                        <Loader2 className="animate-spin" size={16} />
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500 text-xs">
+                        Page {page.pageNumber}
+                      </div>
+                    )}
+                    
+                    {/* Selection overlay */}
+                    {selectedPages.includes(page.index) && (
+                      <div className="absolute inset-0 bg-red-500 bg-opacity-20 flex items-center justify-center">
+                        <div className="bg-red-500 text-white rounded-full p-1">
+                          <Check size={16} />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </button>
-            ))}
-          </div>
+                  
+                  {/* Page number */}
+                  <div className="text-sm font-medium text-gray-700">
+                    Page {page.pageNumber}
+                  </div>
+                  
+                  {/* Hover effect */}
+                  <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-300 rounded-lg pointer-events-none transition-colors" />
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {loadingPreviews && Object.keys(pageImages).length > 0 && (
+            <div className="mt-4 text-sm text-gray-500 text-center">
+              Loading previews... ({Object.keys(pageImages).length}/{pageCount} pages)
+            </div>
+          )}
         </div>
 
         {!modifiedPdfUrl && (
