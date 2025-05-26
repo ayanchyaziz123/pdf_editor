@@ -38,7 +38,7 @@ export default function PDFPageDeleter({ file }) {
         };
         document.head.appendChild(script);
       } catch (err) {
-        setError('Failed to load PDF.js library');
+        setError('Failed to load PDF.js library', err);
       }
     };
 

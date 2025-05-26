@@ -999,7 +999,7 @@ export default function EnhancedPDFEditor() {
           <h3 className="text-sm font-medium text-blue-800 mb-2">PDF Editor Instructions:</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs text-blue-700">
             <div>
-              <strong>File Upload:</strong> Click "New PDF" to load a different PDF file.
+              <strong>File Upload:</strong> Click New PDF to load a different PDF file.
             </div>
             <div>
               <strong>Navigation:</strong> Use page controls to navigate through your PDF.
