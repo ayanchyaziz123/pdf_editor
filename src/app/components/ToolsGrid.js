@@ -415,7 +415,7 @@ export default function ToolsGrid() {
           Need a Custom Tool?
         </h3>
         <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-          Can't find what you're looking for? Let us know what PDF tool you need and we'll consider adding it to our toolkit.
+          Can&apost find what you're looking for? Let us know what PDF tool you need and we'll consider adding it to our toolkit.
         </p>
         <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors">
           Request a Tool

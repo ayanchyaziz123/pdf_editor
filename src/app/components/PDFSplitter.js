@@ -91,7 +91,7 @@ export default function PDFSplitter({ file }) {
       
       return { pages: Array.from(pages).sort((a, b) => a - b), error: null };
     } catch (err) {
-      return { pages: [], error: "Invalid page selection format." };
+      return { pages: [], error: "Invalid page selection format.", err };
     }
   };
 
