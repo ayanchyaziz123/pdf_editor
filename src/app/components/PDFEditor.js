@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Save, Undo, Redo, Download, ChevronLeft, ChevronRight, Type, PenTool, StickyNote, Trash2, RotateCw, ZoomIn, ZoomOut, Move, Square, Circle, ArrowRight, Highlighter, FileText, Upload } from "lucide-react";
+import { Save, Undo, Redo, Download, ChevronLeft, ChevronRight, Type, PenTool,Trash2, ZoomIn, ZoomOut, Move, Square, Circle, Highlighter, FileText, Upload } from "lucide-react";
 
 export default function EnhancedPDFEditor() {
   const [file, setFile] = useState(null);
