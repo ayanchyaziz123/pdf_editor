@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { FileUp, X, File, Trash2, AlertCircle, CheckCircle, Plus, FolderOpen } from "lucide-react";
 
 export default function MultiFileUploader({ 
@@ -14,43 +14,39 @@ export default function MultiFileUploader({
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState("");
   const [files, setFiles] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef(null);
   
   const maxSizeInBytes = maxFileSizeMB * 1024 * 1024;
-  setIsUploading(false)
-  const formatFileSize = (bytes) => {
+
+  const formatFileSize = useCallback((bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  }, []);
 
-  const getAcceptedTypesDisplay = () => {
+  const getAcceptedTypesDisplay = useCallback(() => {
     if (!acceptedFileTypes) return "All file types";
     if (Array.isArray(acceptedFileTypes)) {
       return acceptedFileTypes.map(type => type.startsWith('.') ? type.toUpperCase() : `.${type.toUpperCase()}`).join(', ');
     }
     return acceptedFileTypes.toUpperCase();
-  };
+  }, [acceptedFileTypes]);
 
-  const getTotalSize = () => {
+  const getTotalSize = useCallback(() => {
     return files.reduce((total, file) => total + file.size, 0);
-  };
+  }, [files]);
 
-  const getFileIcon = (fileName) => {
-    const extension = fileName.split('.').pop().toLowerCase();
-    console.log(extension)
-    // You could expand this with more specific icons
+  const getFileIcon = useCallback((fileName) => {
     return <File size={20} className="text-blue-500" />;
-  };
+  }, []);
 
-  const handleDrag = (e) => {
+  const handleDrag = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (disabled || isUploading) return;
+    if (disabled) return;
     
     if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
@@ -67,9 +63,9 @@ export default function MultiFileUploader({
         setDragActive(false);
       }
     }
-  };
+  }, [disabled]);
 
-  const validateFile = (file) => {
+  const validateFile = useCallback((file) => {
     // Check file type
     if (acceptedFileTypes) {
       const fileType = file.name.split('.').pop().toLowerCase();
@@ -91,9 +87,17 @@ export default function MultiFileUploader({
     }
     
     return null;
-  };
+  }, [acceptedFileTypes, maxSizeInBytes, maxFileSizeMB, formatFileSize, getAcceptedTypesDisplay]);
 
-  const addFiles = (newFiles) => {
+  const updateFiles = useCallback((newFiles) => {
+    setFiles(newFiles);
+    // Call parent callback
+    if (onFilesUpload) {
+      onFilesUpload(newFiles);
+    }
+  }, [onFilesUpload]);
+
+  const addFiles = useCallback((newFiles) => {
     const validFiles = [];
     const errors = [];
     
@@ -130,57 +134,54 @@ export default function MultiFileUploader({
     
     if (validFiles.length > 0) {
       const updatedFiles = [...files, ...validFiles];
-      setFiles(updatedFiles);
-      onFilesUpload(updatedFiles);
+      updateFiles(updatedFiles);
     }
-  };
+  }, [files, maxFiles, validateFile, updateFiles]);
 
-  const handleDrop = (e) => {
+  const handleDrop = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     
-    if (disabled || isUploading) return;
+    if (disabled) return;
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       addFiles(e.dataTransfer.files);
     }
-  };
+  }, [disabled, addFiles]);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     e.preventDefault();
     
-    if (disabled || isUploading) return;
+    if (disabled) return;
     
     if (e.target.files && e.target.files.length > 0) {
       addFiles(e.target.files);
       // Reset input value to allow same file selection again
       e.target.value = '';
     }
-  };
+  }, [disabled, addFiles]);
 
-  const handleRemoveFile = (index) => {
+  const handleRemoveFile = useCallback((index) => {
     const newFiles = [...files];
     newFiles.splice(index, 1);
-    setFiles(newFiles);
-    onFilesUpload(newFiles);
+    updateFiles(newFiles);
     setError(""); // Clear any errors when removing files
-  };
+  }, [files, updateFiles]);
 
-  const clearAllFiles = () => {
-    setFiles([]);
+  const clearAllFiles = useCallback(() => {
+    updateFiles([]);
     setError("");
-    onFilesUpload([]);
-  };
+  }, [updateFiles]);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setError("");
-  };
+  }, []);
 
-  const handleClick = () => {
-    if (disabled || isUploading) return;
+  const handleClick = useCallback(() => {
+    if (disabled) return;
     inputRef.current?.click();
-  };
+  }, [disabled]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -233,7 +234,7 @@ export default function MultiFileUploader({
           accept={Array.isArray(acceptedFileTypes) ? acceptedFileTypes.join(',') : acceptedFileTypes}
           onChange={handleChange}
           multiple
-          disabled={disabled || isUploading}
+          disabled={disabled}
           className="hidden"
         />
         
@@ -330,7 +331,7 @@ export default function MultiFileUploader({
           <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
             {files.map((file, index) => (
               <div 
-                key={`${file.name}-${index}-${file.size}`}
+                key={`${file.name}-${index}-${file.size}-${file.lastModified}`}
                 className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center min-w-0 flex-1">
