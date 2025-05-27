@@ -41,6 +41,7 @@ export default function MultiFileUploader({
 
   const getFileIcon = (fileName) => {
     const extension = fileName.split('.').pop().toLowerCase();
+    console.log(extension)
     // You could expand this with more specific icons
     return <File size={20} className="text-blue-500" />;
   };
