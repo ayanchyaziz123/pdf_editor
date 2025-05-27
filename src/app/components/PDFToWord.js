@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState} from "react";
 import { FileText, Download, Loader2, AlertCircle, CheckCircle, Eye } from "lucide-react";
 
 export default function PDFToWordConverter({ files = [] }) {
@@ -142,7 +142,7 @@ export default function PDFToWordConverter({ files = [] }) {
         Paragraph = docxLib.Paragraph;
         TextRun = docxLib.TextRun;
       } catch (docxError) {
-        throw new Error('Word document library not available. Please install docx package.');
+        throw new Error('Word document library not available. Please install docx package.', docxError);
       }
       
       setProgress(80);
@@ -249,71 +249,71 @@ export default function PDFToWordConverter({ files = [] }) {
   };
 
   // Alternative method using pdf2pic or other libraries
-  const convertPDFToWordAlternative = async (file) => {
-    try {
-      // Use FileReader to read the PDF as text (limited but works for text-based PDFs)
-      const text = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            // This is a simplified approach - extract readable text
-            const result = reader.result;
-            // Basic text extraction (this is very limited)
-            resolve("Text extraction from PDF - please use a proper PDF parsing solution");
-          } catch (err) {
-            reject(err);
-          }
-        };
-        reader.onerror = reject;
-        reader.readAsText(file);
-      });
+//   const convertPDFToWordAlternative = async (file) => {
+//     try {
+//       // Use FileReader to read the PDF as text (limited but works for text-based PDFs)
+//       const text = await new Promise((resolve, reject) => {
+//         const reader = new FileReader();
+//         reader.onload = () => {
+//           try {
+//             // This is a simplified approach - extract readable text
+//             const result = reader.result;
+//             // Basic text extraction (this is very limited)
+//             resolve("Text extraction from PDF - please use a proper PDF parsing solution");
+//           } catch (err) {
+//             reject(err);
+//           }
+//         };
+//         reader.onerror = reject;
+//         reader.readAsText(file);
+//       });
 
-      // Create Word document with extracted text
-      const { Document, Packer, Paragraph, TextRun } = await import('docx');
+//       // Create Word document with extracted text
+//       const { Document, Packer, Paragraph, TextRun } = await import('docx');
       
-      const doc = new Document({
-        sections: [{
-          properties: {},
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Converted from: ${file.name}`,
-                  bold: true,
-                  size: 24
-                })
-              ],
-              spacing: { after: 400 }
-            }),
-            new Paragraph({
-              children: [new TextRun("Note: This is a simplified conversion. For better results, please use the PDF.js method.")],
-              spacing: { after: 200 }
-            })
-          ]
-        }]
-      });
+//       const doc = new Document({
+//         sections: [{
+//           properties: {},
+//           children: [
+//             new Paragraph({
+//               children: [
+//                 new TextRun({
+//                   text: `Converted from: ${file.name}`,
+//                   bold: true,
+//                   size: 24
+//                 })
+//               ],
+//               spacing: { after: 400 }
+//             }),
+//             new Paragraph({
+//               children: [new TextRun("Note: This is a simplified conversion. For better results, please use the PDF.js method.")],
+//               spacing: { after: 200 }
+//             })
+//           ]
+//         }]
+//       });
       
-      const buffer = await Packer.toBuffer(doc);
-      const blob = new Blob([buffer], { 
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-      });
+//       const buffer = await Packer.toBuffer(doc);
+//       const blob = new Blob([buffer], { 
+//         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+//       });
       
-      const url = URL.createObjectURL(blob);
-      const fileName = file.name.replace('.pdf', '.docx');
+//       const url = URL.createObjectURL(blob);
+//       const fileName = file.name.replace('.pdf', '.docx');
       
-      return {
-        url,
-        fileName,
-        originalName: file.name,
-        size: blob.size,
-        type: 'Word Document (.docx)'
-      };
+//       return {
+//         url,
+//         fileName,
+//         originalName: file.name,
+//         size: blob.size,
+//         type: 'Word Document (.docx)'
+//       };
       
-    } catch (error) {
-      console.error('Alternative conversion error:', error);
-      throw new Error(`Failed to convert ${file.name}: ${error.message}`);
-    }
-  };
+//     } catch (error) {
+//       console.error('Alternative conversion error:', error);
+//       throw new Error(`Failed to convert ${file.name}: ${error.message}`);
+//     }
+//   };
 
   const convertFiles = async () => {
     if (!files || files.length === 0) {
