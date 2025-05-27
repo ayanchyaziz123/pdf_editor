@@ -26,16 +26,14 @@ import {
   FileCheck,
   Crop,
   ArrowUpDown,
-
   Shield,
   Bookmark,
   Layers,
-
   Zap,
   Settings,
-
   Hash,
-
+  TrendingUp,
+  Star
 } from "lucide-react";
 
 const tools = [
@@ -46,7 +44,8 @@ const tools = [
     description: "Modify text and images in your PDF files",
     icon: FileEdit,
     color: "bg-blue-500",
-    category: "edit"
+    category: "edit",
+    popular: true
   },
   {
     id: "merge",
@@ -54,7 +53,8 @@ const tools = [
     description: "Combine multiple PDFs into a single document",
     icon: Combine,
     color: "bg-green-500",
-    category: "organize"
+    category: "organize",
+    popular: true
   },
   {
     id: "split",
@@ -62,7 +62,8 @@ const tools = [
     description: "Extract pages or split a PDF into multiple files",
     icon: Scissors,
     color: "bg-yellow-500",
-    category: "organize"
+    category: "organize",
+    popular: true
   },
   {
     id: "delete_page",
@@ -70,7 +71,8 @@ const tools = [
     description: "Remove unwanted pages from your PDF",
     icon: Trash,
     color: "bg-red-500",
-    category: "organize"
+    category: "organize",
+    popular: true
   },
   {
     id: "shuffle",
@@ -78,7 +80,8 @@ const tools = [
     description: "Reorder and rearrange PDF pages",
     icon: Shuffle,
     color: "bg-indigo-500",
-    category: "organize"
+    category: "organize",
+    popular: true
   },
   {
     id: "rotate",
@@ -357,7 +360,13 @@ const categories = {
 };
 
 export default function ToolsGrid() {
-  const groupedTools = tools.reduce((acc, tool) => {
+  // Get popular tools in specified order
+  const popularToolsOrder = ["merge", "shuffle", "split", "edit", "delete_page"];
+  const popularTools = popularToolsOrder.map(id => tools.find(tool => tool.id === id)).filter(Boolean);
+  
+  // Group remaining tools by category (excluding popular ones)
+  const remainingTools = tools.filter(tool => !tool.popular);
+  const groupedTools = remainingTools.reduce((acc, tool) => {
     if (!acc[tool.category]) {
       acc[tool.category] = [];
     }
@@ -365,46 +374,77 @@ export default function ToolsGrid() {
     return acc;
   }, {});
 
+  const ToolCard = ({ tool, isPopular = false }) => (
+    <Link 
+      key={tool.id}
+      href={`/tools/${tool.id}`}
+      className={`group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-gray-200 ${isPopular ? 'hover:shadow-xl' : ''}`}
+    >
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className={`${tool.color} text-white p-3 rounded-lg inline-block group-hover:scale-110 transition-transform duration-200`}>
+            <tool.icon size={24} />
+          </div>
+          {isPopular && (
+            <div className="flex items-center gap-1 bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
+              <Star size={12} className="fill-current" />
+              Popular
+            </div>
+          )}
+        </div>
+        <h4 className="text-lg font-semibold mb-2 text-gray-900 group-hover:text-gray-700">
+          {tool.name}
+        </h4>
+        <p className="text-gray-600 text-sm leading-relaxed">
+          {tool.description}
+        </p>
+      </div>
+      <div className="px-6 pb-4">
+        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+          {categories[tool.category]}
+        </div>
+      </div>
+    </Link>
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-center mb-12">
-        <h2 className="text-4xl font-bold text-gray-900 mb-4">
-          Complete PDF Toolkit
-        </h2>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Everything you need to work with PDF files - from basic editing to advanced processing
-        </p>
+      {/* Most Popular Tools Section */}
+      <div className="mb-16">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-2 rounded-lg">
+            <TrendingUp size={24} />
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-gray-900">Most Popular Tools</h3>
+            <p className="text-gray-600 mt-1">The most commonly used PDF tools by our users</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          {popularTools.map((tool) => (
+            <ToolCard key={tool.id} tool={tool} isPopular={true} />
+          ))}
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t-2 border-gray-100 mb-16"></div>
+
+      {/* All Tools by Category */}
+      <div className="mb-8">
+        <h3 className="text-3xl font-bold text-gray-900 mb-2">All PDF Tools</h3>
+        <p className="text-gray-600">Complete toolkit for all your PDF needs, organized by category</p>
       </div>
 
       {Object.entries(groupedTools).map(([categoryKey, categoryTools]) => (
         <div key={categoryKey} className="mb-16">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-200 pb-2">
+          <h4 className="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-200 pb-2">
             {categories[categoryKey]}
-          </h3>
+          </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {categoryTools.map((tool) => (
-              <Link 
-                key={tool.id}
-                href={`/tools/${tool.id}`}
-                className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-gray-200"
-              >
-                <div className="p-6">
-                  <div className={`${tool.color} text-white p-3 rounded-lg inline-block mb-4 group-hover:scale-110 transition-transform duration-200`}>
-                    <tool.icon size={24} />
-                  </div>
-                  <h4 className="text-lg font-semibold mb-2 text-gray-900 group-hover:text-gray-700">
-                    {tool.name}
-                  </h4>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    {tool.description}
-                  </p>
-                </div>
-                <div className="px-6 pb-4">
-                  <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    {categories[categoryKey]}
-                  </div>
-                </div>
-              </Link>
+              <ToolCard key={tool.id} tool={tool} />
             ))}
           </div>
         </div>
