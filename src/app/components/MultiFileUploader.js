@@ -14,11 +14,11 @@ export default function MultiFileUploader({
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState("");
   const [files, setFiles] = useState([]);
-  const [isUploading, _] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef(null);
   
   const maxSizeInBytes = maxFileSizeMB * 1024 * 1024;
-
+  setIsUploading(false)
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
