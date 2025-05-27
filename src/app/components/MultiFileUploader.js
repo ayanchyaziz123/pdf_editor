@@ -14,7 +14,7 @@ export default function MultiFileUploader({
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState("");
   const [files, setFiles] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading, _] = useState(false);
   const inputRef = useRef(null);
   
   const maxSizeInBytes = maxFileSizeMB * 1024 * 1024;

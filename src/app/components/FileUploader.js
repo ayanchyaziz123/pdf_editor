@@ -90,7 +90,7 @@ export default function FileUploader({
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (err) {
-      setError("Upload failed. Please try again.");
+      setError("Upload failed. Please try again.", err);
     } finally {
       setIsUploading(false);
     }
