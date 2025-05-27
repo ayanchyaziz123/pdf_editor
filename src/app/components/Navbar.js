@@ -18,11 +18,11 @@ export default function Navbar() {
           
           {/* Desktop navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/tools/edit" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-              Edit PDF
-            </Link>
             <Link href="/tools/merge" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
               Merge PDFs
+            </Link>
+            <Link href="/tools/shuffle" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+              Shuffle PDF
             </Link>
             <Link href="/tools/split" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
               Split PDF
@@ -30,8 +30,8 @@ export default function Navbar() {
             <Link href="/tools/compress" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
               Compress PDF
             </Link>
-            <Link href="/tools/converter" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
-              Convert PDF
+            <Link href="/tools/delete_page" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+              Delete PDF
             </Link>
           </div>
           

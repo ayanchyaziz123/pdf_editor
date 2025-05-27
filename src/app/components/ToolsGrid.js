@@ -37,16 +37,7 @@ import {
 } from "lucide-react";
 
 const tools = [
-  // Core PDF Tools
-  {
-    id: "edit",
-    name: "Edit PDF",
-    description: "Modify text and images in your PDF files",
-    icon: FileEdit,
-    color: "bg-blue-500",
-    category: "edit",
-    popular: true
-  },
+  // Available Tools
   {
     id: "merge",
     name: "Merge PDFs",
@@ -54,7 +45,8 @@ const tools = [
     icon: Combine,
     color: "bg-green-500",
     category: "organize",
-    popular: true
+    popular: true,
+    available: true
   },
   {
     id: "split",
@@ -63,7 +55,8 @@ const tools = [
     icon: Scissors,
     color: "bg-yellow-500",
     category: "organize",
-    popular: true
+    popular: true,
+    available: true
   },
   {
     id: "delete_page",
@@ -72,7 +65,27 @@ const tools = [
     icon: Trash,
     color: "bg-red-500",
     category: "organize",
-    popular: true
+    popular: true,
+    available: true
+  },
+  {
+    id: "compress",
+    name: "Compress PDF",
+    description: "Reduce file size while maintaining quality",
+    icon: FileArchive,
+    color: "bg-red-500",
+    category: "optimize",
+    available: true
+  },
+  {
+    id: "edit",
+    name: "Edit PDF",
+    description: "Modify text and images in your PDF files",
+    icon: FileEdit,
+    color: "bg-blue-500",
+    category: "edit",
+    popular: true,
+    available: true
   },
   {
     id: "shuffle",
@@ -81,7 +94,19 @@ const tools = [
     icon: Shuffle,
     color: "bg-indigo-500",
     category: "organize",
-    popular: true
+    popular: true,
+    available: true
+  },
+
+  // Coming Soon Tools
+  {
+    id: "rotate",
+    name: "Rotate PDF",
+    description: "Change the orientation of your PDF pages",
+    icon: Rotate3d,
+    color: "bg-pink-500",
+    category: "organize",
+    available: false
   },
   {
     id: "rotate",
@@ -89,17 +114,19 @@ const tools = [
     description: "Change the orientation of your PDF pages",
     icon: Rotate3d,
     color: "bg-pink-500",
-    category: "organize"
+    category: "organize",
+    available: false
   },
 
-  // Conversion & Format Tools
+  // Conversion & Format Tools - Coming Soon
   {
     id: "convert",
     name: "Convert PDF",
     description: "Convert PDFs to other formats and vice versa",
     icon: FileUp,
     color: "bg-purple-500",
-    category: "convert"
+    category: "convert",
+    available: false
   },
   {
     id: "pdf-to-images",
@@ -107,7 +134,8 @@ const tools = [
     description: "Extract pages as JPG, PNG, or other image formats",
     icon: FileImage,
     color: "bg-orange-500",
-    category: "convert"
+    category: "convert",
+    available: false
   },
   {
     id: "images-to-pdf",
@@ -115,7 +143,8 @@ const tools = [
     description: "Create PDF from multiple images",
     icon: Image,
     color: "bg-teal-500",
-    category: "convert"
+    category: "convert",
+    available: false
   },
   {
     id: "word-to-pdf",
@@ -123,7 +152,8 @@ const tools = [
     description: "Convert Word documents to PDF format",
     icon: FileText,
     color: "bg-blue-600",
-    category: "convert"
+    category: "convert",
+    available: false
   },
   {
     id: "excel-to-pdf",
@@ -131,17 +161,19 @@ const tools = [
     description: "Convert spreadsheets to PDF format",
     icon: BarChart3,
     color: "bg-emerald-500",
-    category: "convert"
+    category: "convert",
+    available: false
   },
 
-  // Security Tools
+  // Security Tools - Coming Soon
   {
     id: "protect",
     name: "Protect PDF",
     description: "Add password protection and permissions",
     icon: Lock,
     color: "bg-gray-700",
-    category: "security"
+    category: "security",
+    available: false
   },
   {
     id: "unlock",
@@ -149,7 +181,8 @@ const tools = [
     description: "Remove password protection from PDFs",
     icon: Unlock,
     color: "bg-gray-600",
-    category: "security"
+    category: "security",
+    available: false
   },
   {
     id: "watermark",
@@ -157,7 +190,8 @@ const tools = [
     description: "Add text or image watermarks to your PDF",
     icon: Stamp,
     color: "bg-cyan-500",
-    category: "security"
+    category: "security",
+    available: false
   },
   {
     id: "redact",
@@ -165,17 +199,19 @@ const tools = [
     description: "Permanently remove sensitive information",
     icon: Shield,
     color: "bg-slate-600",
-    category: "security"
+    category: "security",
+    available: false
   },
 
-  // Annotation & Markup Tools
+  // Annotation & Markup Tools - Coming Soon
   {
     id: "annotate",
     name: "Annotate PDF",
     description: "Add comments, notes, and markup",
     icon: MessageSquare,
     color: "bg-violet-500",
-    category: "annotate"
+    category: "annotate",
+    available: false
   },
   {
     id: "highlight",
@@ -183,7 +219,8 @@ const tools = [
     description: "Highlight important text and passages",
     icon: Highlighter,
     color: "bg-yellow-400",
-    category: "annotate"
+    category: "annotate",
+    available: false
   },
   {
     id: "draw",
@@ -191,7 +228,8 @@ const tools = [
     description: "Add drawings, shapes, and freehand annotations",
     icon: PenTool,
     color: "bg-rose-500",
-    category: "annotate"
+    category: "annotate",
+    available: false
   },
   {
     id: "signature",
@@ -199,25 +237,19 @@ const tools = [
     description: "Add electronic signatures to documents",
     icon: Type,
     color: "bg-indigo-600",
-    category: "annotate"
+    category: "annotate",
+    available: false
   },
 
-  // Optimization & Quality Tools
-  {
-    id: "compress",
-    name: "Compress PDF",
-    description: "Reduce file size while maintaining quality",
-    icon: FileArchive,
-    color: "bg-red-500",
-    category: "optimize"
-  },
+  // Optimization & Quality Tools - Coming Soon (except compress)
   {
     id: "enhance",
     name: "Enhance PDF",
     description: "Improve image quality and text clarity",
     icon: Zap,
     color: "bg-amber-500",
-    category: "optimize"
+    category: "optimize",
+    available: false
   },
   {
     id: "crop",
@@ -225,7 +257,8 @@ const tools = [
     description: "Trim and crop PDF page margins",
     icon: Crop,
     color: "bg-lime-500",
-    category: "optimize"
+    category: "optimize",
+    available: false
   },
   {
     id: "repair",
@@ -233,17 +266,19 @@ const tools = [
     description: "Fix corrupted or damaged PDF files",
     icon: Settings,
     color: "bg-gray-500",
-    category: "optimize"
+    category: "optimize",
+    available: false
   },
 
-  // Analysis & Information Tools
+  // Analysis & Information Tools - Coming Soon
   {
     id: "search",
     name: "Search PDF",
     description: "Find and extract text from PDF documents",
     icon: Search,
     color: "bg-blue-400",
-    category: "analyze"
+    category: "analyze",
+    available: false
   },
   {
     id: "extract-text",
@@ -251,7 +286,8 @@ const tools = [
     description: "Extract all text content from PDF",
     icon: Type,
     color: "bg-green-400",
-    category: "analyze"
+    category: "analyze",
+    available: false
   },
   {
     id: "extract-images",
@@ -259,7 +295,8 @@ const tools = [
     description: "Extract all images from PDF pages",
     icon: Image,
     color: "bg-purple-400",
-    category: "analyze"
+    category: "analyze",
+    available: false
   },
   {
     id: "pdf-info",
@@ -267,7 +304,8 @@ const tools = [
     description: "View detailed information about your PDF",
     icon: FileCheck,
     color: "bg-cyan-600",
-    category: "analyze"
+    category: "analyze",
+    available: false
   },
   {
     id: "compare",
@@ -275,17 +313,19 @@ const tools = [
     description: "Find differences between two PDF files",
     icon: ArrowUpDown,
     color: "bg-orange-600",
-    category: "analyze"
+    category: "analyze",
+    available: false
   },
 
-  // Advanced Tools
+  // Advanced Tools - Coming Soon
   {
     id: "ocr",
     name: "OCR Text Recognition",
     description: "Convert scanned PDFs to searchable text",
     icon: Eye,
     color: "bg-emerald-600",
-    category: "advanced"
+    category: "advanced",
+    available: false
   },
   {
     id: "form-filler",
@@ -293,7 +333,8 @@ const tools = [
     description: "Fill out PDF forms automatically",
     icon: FileText,
     color: "bg-blue-700",
-    category: "advanced"
+    category: "advanced",
+    available: false
   },
   {
     id: "bookmark",
@@ -301,7 +342,8 @@ const tools = [
     description: "Create navigation bookmarks and table of contents",
     icon: Bookmark,
     color: "bg-amber-600",
-    category: "advanced"
+    category: "advanced",
+    available: false
   },
   {
     id: "batch-process",
@@ -309,17 +351,19 @@ const tools = [
     description: "Process multiple PDFs at once",
     icon: Layers,
     color: "bg-slate-500",
-    category: "advanced"
+    category: "advanced",
+    available: false
   },
 
-  // Utility Tools
+  // Utility Tools - Coming Soon
   {
     id: "print",
     name: "Print PDF",
     description: "Print your PDFs with customized settings",
     icon: Printer,
     color: "bg-gray-600",
-    category: "utility"
+    category: "utility",
+    available: false
   },
   {
     id: "preview",
@@ -327,7 +371,8 @@ const tools = [
     description: "View and navigate PDF files online",
     icon: Eye,
     color: "bg-teal-600",
-    category: "utility"
+    category: "utility",
+    available: false
   },
   {
     id: "duplicate",
@@ -335,7 +380,8 @@ const tools = [
     description: "Create copies of specific pages",
     icon: Copy,
     color: "bg-indigo-400",
-    category: "utility"
+    category: "utility",
+    available: false
   },
   {
     id: "page-numbers",
@@ -343,7 +389,8 @@ const tools = [
     description: "Insert custom page numbers and headers/footers",
     icon: Hash,
     color: "bg-violet-600",
-    category: "utility"
+    category: "utility",
+    available: false
   }
 ];
 
@@ -360,9 +407,11 @@ const categories = {
 };
 
 export default function ToolsGrid() {
-  // Get popular tools in specified order
+  // Get available popular tools only
   const popularToolsOrder = ["merge", "shuffle", "split", "edit", "delete_page"];
-  const popularTools = popularToolsOrder.map(id => tools.find(tool => tool.id === id)).filter(Boolean);
+  const popularTools = popularToolsOrder
+    .map(id => tools.find(tool => tool.id === id))
+    .filter(tool => tool && tool.available);
   
   // Group remaining tools by category (excluding popular ones)
   const remainingTools = tools.filter(tool => !tool.popular);
@@ -374,38 +423,85 @@ export default function ToolsGrid() {
     return acc;
   }, {});
 
-  const ToolCard = ({ tool, isPopular = false }) => (
-    <Link 
-      key={tool.id}
-      href={`/tools/${tool.id}`}
-      className={`group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-gray-200 ${isPopular ? 'hover:shadow-xl' : ''}`}
-    >
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className={`${tool.color} text-white p-3 rounded-lg inline-block group-hover:scale-110 transition-transform duration-200`}>
-            <tool.icon size={24} />
-          </div>
-          {isPopular && (
-            <div className="flex items-center gap-1 bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
-              <Star size={12} className="fill-current" />
-              Popular
+  const ToolCard = ({ tool, isPopular = false }) => {
+    const isAvailable = tool.available;
+    
+    const CardContent = (
+      <div className={`group bg-white rounded-xl shadow-sm transition-all duration-300 overflow-hidden border border-gray-100 ${
+        isAvailable 
+          ? `hover:shadow-lg hover:border-gray-200 ${isPopular ? 'hover:shadow-xl' : ''}` 
+          : 'opacity-75'
+      }`}>
+        <div className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className={`${tool.color} text-white p-3 rounded-lg inline-block ${
+              isAvailable ? 'group-hover:scale-110' : ''
+            } transition-transform duration-200 relative`}>
+              <tool.icon size={24} />
+              {!isAvailable && (
+                <div className="absolute inset-0 bg-gray-500 bg-opacity-50 rounded-lg flex items-center justify-center">
+                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-gray-500 text-xs font-bold">?</span>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+            <div className="flex flex-col gap-1">
+              {isPopular && isAvailable && (
+                <div className="flex items-center gap-1 bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
+                  <Star size={12} className="fill-current" />
+                  Popular
+                </div>
+              )}
+              {!isAvailable && (
+                <div className="flex items-center gap-1 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
+                  <span>🚧</span>
+                  Coming Soon
+                </div>
+              )}
+            </div>
+          </div>
+          <h4 className={`text-lg font-semibold mb-2 ${
+            isAvailable 
+              ? 'text-gray-900 group-hover:text-gray-700' 
+              : 'text-gray-500'
+          }`}>
+            {tool.name}
+          </h4>
+          <p className={`text-sm leading-relaxed ${
+            isAvailable ? 'text-gray-600' : 'text-gray-400'
+          }`}>
+            {isAvailable ? tool.description : "This feature is currently under development and will be available soon."}
+          </p>
         </div>
-        <h4 className="text-lg font-semibold mb-2 text-gray-900 group-hover:text-gray-700">
-          {tool.name}
-        </h4>
-        <p className="text-gray-600 text-sm leading-relaxed">
-          {tool.description}
-        </p>
-      </div>
-      <div className="px-6 pb-4">
-        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-          {categories[tool.category]}
+        <div className="px-6 pb-4">
+          <div className={`text-xs font-medium uppercase tracking-wider ${
+            isAvailable ? 'text-gray-400' : 'text-gray-300'
+          }`}>
+            {categories[tool.category]}
+          </div>
         </div>
       </div>
-    </Link>
-  );
+    );
+
+    if (isAvailable) {
+      return (
+        <Link 
+          key={tool.id}
+          href={`/tools/${tool.id}`}
+          className="cursor-pointer"
+        >
+          {CardContent}
+        </Link>
+      );
+    } else {
+      return (
+        <div key={tool.id} className="cursor-not-allowed">
+          {CardContent}
+        </div>
+      );
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
