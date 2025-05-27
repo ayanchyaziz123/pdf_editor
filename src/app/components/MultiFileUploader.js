@@ -39,6 +39,7 @@ export default function MultiFileUploader({
   }, [files]);
 
   const getFileIcon = useCallback((fileName) => {
+    console.log(fileName)
     return <File size={20} className="text-blue-500" />;
   }, []);
 
