@@ -213,10 +213,12 @@ export default function ShufflePDF({ file: externalFile, onFileChange }) {
     loadPdfPages();
   }, [file, pdfJsLoaded]);
 
-  // Drag and drop handlers for page reordering
+  // Fixed drag and drop handlers for page reordering
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
     e.dataTransfer.effectAllowed = 'move';
+    // Add visual feedback
+    e.dataTransfer.setData('text/plain', '');
   };
 
   const handleDragEnd = () => {
@@ -226,22 +228,42 @@ export default function ShufflePDF({ file: externalFile, onFileChange }) {
 
   const handlePageDragOver = (e, index) => {
     e.preventDefault();
-    setDragOverIndex(index);
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Only update drag over index if it's different from current
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handlePageDragLeave = (e) => {
+    // Only clear dragOverIndex if we're actually leaving the drop zone
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverIndex(null);
+    }
   };
 
   const handlePageDrop = (e, dropIndex) => {
     e.preventDefault();
     
-    if (draggedItem === null) return;
+    if (draggedItem === null || draggedItem === dropIndex) {
+      setDraggedItem(null);
+      setDragOverIndex(null);
+      return;
+    }
     
     const newPages = [...arrangedPages];
     const draggedPage = newPages[draggedItem];
     
-    // Remove dragged item
+    // Remove the dragged item from its original position
     newPages.splice(draggedItem, 1);
     
-    // Insert at new position
+    // Calculate the correct insertion index
+    // If we're moving an item to the right (higher index), we need to account
+    // for the fact that we've already removed one item
     const insertIndex = draggedItem < dropIndex ? dropIndex - 1 : dropIndex;
+    
+    // Insert the dragged page at the new position
     newPages.splice(insertIndex, 0, draggedPage);
     
     setArrangedPages(newPages);
@@ -512,12 +534,13 @@ export default function ShufflePDF({ file: externalFile, onFileChange }) {
                     onDragStart={(e) => handleDragStart(e, index)}
                     onDragEnd={handleDragEnd}
                     onDragOver={(e) => handlePageDragOver(e, index)}
+                    onDragLeave={handlePageDragLeave}
                     onDrop={(e) => handlePageDrop(e, index)}
                     className={`bg-white border-2 rounded-lg p-3 cursor-move transition-all ${
                       draggedItem === index 
                         ? 'border-blue-500 shadow-lg opacity-50' 
                         : dragOverIndex === index 
-                          ? 'border-blue-300 shadow-md' 
+                          ? 'border-blue-300 shadow-md bg-blue-50' 
                           : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                     }`}
                   >
@@ -527,9 +550,7 @@ export default function ShufflePDF({ file: externalFile, onFileChange }) {
                         <img
                           src={pageImages[page.originalIndex]}
                           alt={`Page ${page.pageNumber}`}
-                          className={`w-full h-full object-contain ${
-                            page.rotation !== 0 ? `transform rotate-${page.rotation === 90 ? '90' : page.rotation === 180 ? '180' : '270'}` : ''
-                          }`}
+                          className="w-full h-full object-contain"
                           style={page.rotation !== 0 ? { transform: `rotate(${page.rotation}deg)` } : {}}
                         />
                       ) : loadingPreviews ? (

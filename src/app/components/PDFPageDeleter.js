@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect} from "react";
 import { PDFDocument } from "pdf-lib";
-import { Trash2, Loader2, Download, FileCheck, Eye, Check } from "lucide-react";
+import { Trash2, Loader2, Download, FileCheck, Eye, Check, X } from "lucide-react";
 
 export default function PDFPageDeleter({ file }) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -14,6 +14,8 @@ export default function PDFPageDeleter({ file }) {
   const [pageImages, setPageImages] = useState({});
   const [loadingPreviews, setLoadingPreviews] = useState(false);
   const [pdfJsLoaded, setPdfJsLoaded] = useState(false);
+  const [hasModifications, setHasModifications] = useState(false);
+  const [currentPdfBytes, setCurrentPdfBytes] = useState(null);
 
   // Load PDF.js from CDN
   useEffect(() => {
@@ -57,6 +59,8 @@ export default function PDFPageDeleter({ file }) {
         setSelectedPages([]);
         setPageImages({});
         setLoadingPreviews(true);
+        setHasModifications(false);
+        setCurrentPdfBytes(null);
         
         // Load the PDF document to get page count using pdf-lib
         const arrayBuffer = await file.arrayBuffer();
@@ -64,9 +68,10 @@ export default function PDFPageDeleter({ file }) {
         const count = pdfDoc.getPageCount();
         setPageCount(count);
         
-        // Create pages array with indexes
+        // Create pages array with stable IDs
         const pagesArray = Array.from({ length: count }, (_, i) => ({
-          index: i,
+          id: `page_${i}`, // Stable identifier
+          originalIndex: i, // Original position in PDF
           pageNumber: i + 1,
         }));
         setPages(pagesArray);
@@ -145,18 +150,130 @@ export default function PDFPageDeleter({ file }) {
     }
   };
 
-  const togglePageSelection = (pageIndex) => {
+  const togglePageSelection = (pageId) => {
     setSelectedPages(prevSelected => {
-      if (prevSelected.includes(pageIndex)) {
-        return prevSelected.filter(i => i !== pageIndex);
+      if (prevSelected.includes(pageId)) {
+        return prevSelected.filter(id => id !== pageId);
       } else {
-        return [...prevSelected, pageIndex];
+        return [...prevSelected, pageId];
       }
     });
   };
 
+  const deleteSinglePage = async (pageId) => {
+    try {
+      if (pageCount === 1) {
+        setError("Cannot delete the last remaining page.");
+        return;
+      }
+      
+      setIsProcessing(true);
+      setError(null);
+      
+      // Find the page to delete
+      const pageToDelete = pages.find(page => page.id === pageId);
+      if (!pageToDelete) {
+        setError("Page not found.");
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Load the original PDF
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      
+      // Create a new PDF document
+      const newPdfDoc = await PDFDocument.create();
+      
+      // Get the pages to keep (all except the one being deleted)
+      const remainingPages = pages.filter(page => page.id !== pageId);
+      const pagesToKeep = remainingPages.map(page => page.originalIndex);
+      
+      // Copy the pages from the original document
+      const copiedPages = await newPdfDoc.copyPages(pdfDoc, pagesToKeep);
+      
+      // Add the copied pages to the new document
+      copiedPages.forEach(page => {
+        newPdfDoc.addPage(page);
+      });
+      
+      // Save the modified PDF
+      const modifiedPdfBytes = await newPdfDoc.save();
+      
+      // Store the current PDF bytes for download
+      setCurrentPdfBytes(modifiedPdfBytes);
+      setHasModifications(true);
+      
+      // Update the pages state - create new pages with updated info
+      const updatedPages = remainingPages.map((page, newIndex) => ({
+        id: `page_${newIndex}`, // New stable ID
+        originalIndex: newIndex, // New index in the modified PDF
+        pageNumber: newIndex + 1, // Sequential page number
+      }));
+      
+      setPages(updatedPages);
+      setPageCount(updatedPages.length);
+      
+      // Update page images - map old images to new positions
+      const updatedPageImages = {};
+      updatedPages.forEach((newPage, newIndex) => {
+        // Find the original page that corresponds to this position
+        const originalPage = remainingPages[newIndex];
+        if (pageImages[originalPage.originalIndex]) {
+          updatedPageImages[newIndex] = pageImages[originalPage.originalIndex];
+        }
+      });
+      setPageImages(updatedPageImages);
+      
+      // Clear selections for deleted pages
+      setSelectedPages(prev => prev.filter(selectedId => selectedId !== pageId));
+      
+      // Create a new file object for future operations
+      const newFile = new File([modifiedPdfBytes], file.name, { type: "application/pdf" });
+      
+      // Update the file reference (this is a bit hacky but necessary for the component to work)
+      Object.defineProperty(newFile, 'arrayBuffer', {
+        value: () => Promise.resolve(modifiedPdfBytes.buffer.slice())
+      });
+      
+      // Replace the file reference
+      file = newFile;
+      
+      setIsProcessing(false);
+    } catch (err) {
+      console.error("Error deleting page:", err);
+      setError("Failed to delete page. Please try again.");
+      setIsProcessing(false);
+    }
+  };
+
+  const downloadCurrentPdf = () => {
+    if (currentPdfBytes) {
+      const blob = new Blob([currentPdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const timestamp = new Date().toISOString().replace(/[-:.]/g, "").substring(0, 14);
+      const fileName = `modified_${timestamp}.pdf`;
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const previewCurrentPdf = () => {
+    if (currentPdfBytes) {
+      const blob = new Blob([currentPdfBytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }
+  };
+
   const selectAllPages = () => {
-    setSelectedPages(pages.map(page => page.index));
+    setSelectedPages(pages.map(page => page.id));
   };
 
   const deselectAllPages = () => {
@@ -166,8 +283,8 @@ export default function PDFPageDeleter({ file }) {
   const invertSelection = () => {
     setSelectedPages(
       pages
-        .map(page => page.index)
-        .filter(index => !selectedPages.includes(index))
+        .map(page => page.id)
+        .filter(id => !selectedPages.includes(id))
     );
   };
 
@@ -195,8 +312,8 @@ export default function PDFPageDeleter({ file }) {
       
       // Copy all pages EXCEPT the selected ones to delete
       const pagesToKeep = pages
-        .filter(page => !selectedPages.includes(page.index))
-        .map(page => page.index);
+        .filter(page => !selectedPages.includes(page.id))
+        .map(page => page.originalIndex);
       
       // Copy the pages from the original document
       const copiedPages = await newPdfDoc.copyPages(pdfDoc, pagesToKeep);
@@ -238,12 +355,10 @@ export default function PDFPageDeleter({ file }) {
   // Show loading state while PDF.js is loading
   if (!pdfJsLoaded) {
     return (
-      <div className="mt-8 mb-16">
-        <div className="bg-white rounded-lg shadow-md p-6 max-w-6xl mx-auto">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="animate-spin mr-2" size={24} />
-            <span className="text-gray-600">Loading PDF viewer...</span>
-          </div>
+      <div className="bg-white rounded-lg shadow-md p-6 max-w-6xl mx-auto">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="animate-spin mr-2" size={24} />
+          <span className="text-gray-600">Loading PDF viewer...</span>
         </div>
       </div>
     );
@@ -274,7 +389,7 @@ export default function PDFPageDeleter({ file }) {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
             <div className="text-sm font-medium text-gray-700">
-              {selectedPages.length} pages selected
+              {selectedPages.length} pages selected for batch delete
             </div>
             <div className="flex space-x-3">
               <button 
@@ -306,51 +421,68 @@ export default function PDFPageDeleter({ file }) {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {pages.map((page) => (
-                <button
-                  key={page.index}
-                  onClick={() => togglePageSelection(page.index)}
-                  className={`relative group flex flex-col items-center p-2 border-2 rounded-lg transition-all hover:shadow-md ${
-                    selectedPages.includes(page.index)
+                <div
+                  key={page.id}
+                  className={`relative group flex flex-col items-center p-2 border-2 rounded-lg transition-all ${
+                    selectedPages.includes(page.id)
                       ? "border-red-500 bg-red-50 shadow-md"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
-                  {/* Page Preview */}
-                  <div className="relative mb-2 w-full aspect-[3/4] bg-white rounded border overflow-hidden">
-                    {pageImages[page.index] ? (
-                      <img
-                        src={pageImages[page.index]}
-                        alt={`Page ${page.pageNumber}`}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : loadingPreviews ? (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <Loader2 className="animate-spin" size={16} />
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500 text-xs">
-                        Page {page.pageNumber}
-                      </div>
-                    )}
-                    
-                    {/* Selection overlay */}
-                    {selectedPages.includes(page.index) && (
-                      <div className="absolute inset-0 bg-red-500 bg-opacity-20 flex items-center justify-center">
-                        <div className="bg-red-500 text-white rounded-full p-1">
-                          <Check size={16} />
+                  {/* Delete Cross Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteSinglePage(page.id);
+                    }}
+                    disabled={isProcessing || pageCount === 1}
+                    className="absolute -top-2 -right-2 z-10 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white rounded-full p-1 shadow-md transition-colors"
+                    title={pageCount === 1 ? "Cannot delete the last page" : `Delete page ${page.pageNumber}`}
+                  >
+                    <X size={14} />
+                  </button>
+
+                  {/* Page Preview - Clickable for selection */}
+                  <button
+                    onClick={() => togglePageSelection(page.id)}
+                    className="w-full"
+                  >
+                    <div className="relative mb-2 w-full aspect-[3/4] bg-white rounded border overflow-hidden">
+                      {pageImages[page.originalIndex] ? (
+                        <img
+                          src={pageImages[page.originalIndex]}
+                          alt={`Page ${page.pageNumber}`}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : loadingPreviews ? (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <Loader2 className="animate-spin" size={16} />
                         </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Page number */}
-                  <div className="text-sm font-medium text-gray-700">
-                    Page {page.pageNumber}
-                  </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500 text-xs">
+                          Page {page.pageNumber}
+                        </div>
+                      )}
+                      
+                      {/* Selection overlay */}
+                      {selectedPages.includes(page.id) && (
+                        <div className="absolute inset-0 bg-red-500 bg-opacity-20 flex items-center justify-center">
+                          <div className="bg-red-500 text-white rounded-full p-1">
+                            <Check size={16} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Page number */}
+                    <div className="text-sm font-medium text-gray-700">
+                      Page {page.pageNumber}
+                    </div>
+                  </button>
                   
                   {/* Hover effect */}
                   <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-300 rounded-lg pointer-events-none transition-colors" />
-                </button>
+                </div>
               ))}
             </div>
           )}
@@ -362,11 +494,39 @@ export default function PDFPageDeleter({ file }) {
           )}
         </div>
 
-        {!modifiedPdfUrl && (
+        {/* Download/Preview section for cross-button deletions */}
+        {hasModifications && !modifiedPdfUrl && (
+          <div className="mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div className="text-blue-800 font-medium mb-2">✓ PDF Modified</div>
+              <div className="text-blue-700 text-sm">You've made changes to the PDF. Download or preview your modified document.</div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={downloadCurrentPdf}
+                className="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-md flex-1 flex items-center justify-center"
+              >
+                <Download className="mr-2" size={20} />
+                Download Modified PDF
+              </button>
+              
+              <button
+                onClick={previewCurrentPdf}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-4 rounded-md flex-1 flex items-center justify-center"
+              >
+                <Eye className="mr-2" size={20} />
+                Preview PDF
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!modifiedPdfUrl && selectedPages.length > 0 && (
           <button
             onClick={deletePages}
             disabled={isProcessing || selectedPages.length === 0 || selectedPages.length === pageCount}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-md disabled:bg-red-300 flex items-center justify-center"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-md disabled:bg-red-300 flex items-center justify-center mb-4"
           >
             {isProcessing ? (
               <>
@@ -376,14 +536,20 @@ export default function PDFPageDeleter({ file }) {
             ) : (
               <>
                 <Trash2 className="mr-2" size={20} />
-                Delete {selectedPages.length} {selectedPages.length === 1 ? 'Page' : 'Pages'}
+                Delete {selectedPages.length} Selected {selectedPages.length === 1 ? 'Page' : 'Pages'}
               </>
             )}
           </button>
         )}
 
+        {/* Final Download Section - only show when batch delete creates a final PDF */}
         {modifiedPdfUrl && (
           <div className="space-y-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <div className="text-green-800 font-medium mb-2">✓ PDF Successfully Modified</div>
+              <div className="text-green-700 text-sm">Your PDF has been processed. Download or preview the result below.</div>
+            </div>
+            
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <a
                 href={modifiedPdfUrl}
@@ -391,7 +557,7 @@ export default function PDFPageDeleter({ file }) {
                 className="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-md flex-1 flex items-center justify-center"
               >
                 <Download className="mr-2" size={20} />
-                Download Modified PDF
+                Download Final PDF
               </a>
               
               <button
@@ -404,10 +570,13 @@ export default function PDFPageDeleter({ file }) {
             </div>
             
             <button
-              onClick={deletePages}
-              className="w-full border border-red-600 text-red-600 hover:bg-red-50 font-medium py-2 px-4 rounded-md"
+              onClick={() => {
+                setModifiedPdfUrl(null);
+                setSelectedPages([]);
+              }}
+              className="w-full border border-blue-600 text-blue-600 hover:bg-blue-50 font-medium py-2 px-4 rounded-md"
             >
-              Delete More Pages
+              Continue Editing
             </button>
           </div>
         )}
