@@ -499,7 +499,7 @@ export default function PDFPageDeleter({ file }) {
           <div className="mb-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
               <div className="text-blue-800 font-medium mb-2">✓ PDF Modified</div>
-              <div className="text-blue-700 text-sm">You've made changes to the PDF. Download or preview your modified document.</div>
+              <div className="text-blue-700 text-sm">You&apos;ve made changes to the PDF. Download or preview your modified document.</div>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3">
