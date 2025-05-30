@@ -14,15 +14,13 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <head>
+      <body>
         <Script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3158034660522527"
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
-      </head>
-      <body>
         <main className="min-h-screen bg-gray-50">
           {children}
         </main>

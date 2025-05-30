@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+/* In your globals.css */
+.ad-container {
+    @apply flex justify-center items-center;
+  }
+  
+  .ad-container .adsbygoogle {
+    @apply w-full max-w-full;
+  }
+  
+  /* Optional: Add some styling for better visual separation */
+  .ad-container {
+    @apply border-t border-b border-gray-200 py-4 my-4;
+  }
