@@ -9,12 +9,12 @@ export default function Home() {
       <Navbar />
       
       {/* Top banner ad */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <AdBanner 
           dataAdSlot="YOUR_AD_SLOT_ID_HERE" 
           className="mb-6"
         />
-      </div>
+      </div> */}
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ToolsGrid />
